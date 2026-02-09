@@ -1,0 +1,96 @@
+/* Friends Panel Styles */
+
+.friends-modal {
+    max-width: 550px;
+}
+
+.friends-intro {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-lg);
+    line-height: 1.5;
+}
+
+.friends-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.friend-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-lg);
+    animation: slideIn 0.3s ease-out backwards;
+}
+
+.friend-fields {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 140px;
+    gap: var(--space-md);
+}
+
+.days-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.days-input {
+    padding-right: 50px;
+}
+
+.days-suffix {
+    position: absolute;
+    right: 12px;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* Days Help */
+.days-help {
+    margin-top: var(--space-lg);
+    padding: var(--space-md);
+    background: rgba(139, 92, 246, 0.1);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--accent-500);
+}
+
+.days-help h4 {
+    font-size: 0.875rem;
+    margin-bottom: var(--space-sm);
+}
+
+.days-help ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.days-help li {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.days-help strong {
+    color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .friend-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .friend-fields {
+        width: 100%;
+        grid-template-columns: 1fr;
+    }
+}
