@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TRIP_INFO, initialFriends, sampleExpenses, CATEGORIES } from './data/initialData';
+import { TRIP_INFO, initialFriends, sampleExpenses, CATEGORIES, initialPayments } from './data/initialData';
 import { calculateBalances, simplifyDebts, getTripStats, formatCurrency } from './utils/splitCalculator';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
@@ -31,7 +31,7 @@ function App() {
 
   const [payments, setPayments] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
-    return saved ? JSON.parse(saved) : [];
+    return saved ? JSON.parse(saved) : initialPayments;
   });
 
   const [activeView, setActiveView] = useState('dashboard');
