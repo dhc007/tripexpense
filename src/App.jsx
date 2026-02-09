@@ -8,13 +8,18 @@ import ExpenseForm from './components/ExpenseForm';
 import SettlementView from './components/SettlementView';
 import FriendsPanel from './components/FriendsPanel';
 import PaymentForm from './components/PaymentForm';
+import UserSelector from './components/UserSelector';
 import './App.css';
+
+// VIEW_ONLY mode - set to true for hosted/production
+const VIEW_ONLY = true;
 
 // LocalStorage keys
 const STORAGE_KEYS = {
   EXPENSES: 'splitit-expenses',
   FRIENDS: 'splitit-friends',
-  PAYMENTS: 'splitit-payments'
+  PAYMENTS: 'splitit-payments',
+  SELECTED_USER: 'splitit-selected-user'
 };
 
 function App() {
@@ -32,6 +37,16 @@ function App() {
   const [payments, setPayments] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
     return saved ? JSON.parse(saved) : initialPayments;
+  });
+
+  // User selection state
+  const [selectedUser, setSelectedUser] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.SELECTED_USER);
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [showUserSelector, setShowUserSelector] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.SELECTED_USER);
+    return !saved; // Show selector if no user was previously selected
   });
 
   const [activeView, setActiveView] = useState('dashboard');
@@ -53,10 +68,28 @@ function App() {
     localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
   }, [payments]);
 
+  // Persist selected user
+  useEffect(() => {
+    if (selectedUser !== null) {
+      localStorage.setItem(STORAGE_KEYS.SELECTED_USER, JSON.stringify(selectedUser));
+    }
+  }, [selectedUser]);
+
   // Calculated values - include payments in balance calculation
   const balances = calculateBalances(expenses, friends, payments);
   const settlements = simplifyDebts(balances);
   const stats = getTripStats(expenses, friends);
+
+  // Handle user selection
+  const handleSelectUser = (user) => {
+    setSelectedUser(user);
+    setShowUserSelector(false);
+    if (user) {
+      localStorage.setItem(STORAGE_KEYS.SELECTED_USER, JSON.stringify(user));
+    } else {
+      localStorage.setItem(STORAGE_KEYS.SELECTED_USER, JSON.stringify({ id: 'guest', name: 'Guest' }));
+    }
+  };
 
   // Handlers
   const handleAddExpense = (expense) => {
@@ -100,10 +133,22 @@ function App() {
 
   return (
     <div className="app">
+      {/* User Selector Modal */}
+      {showUserSelector && (
+        <UserSelector
+          friends={friends}
+          onSelectUser={handleSelectUser}
+          selectedUser={selectedUser}
+        />
+      )}
+
       <Header
         tripInfo={TRIP_INFO}
         totalSpent={stats.totalSpent}
-        onShowFriends={() => setShowFriendsPanel(true)}
+        onShowFriends={VIEW_ONLY ? null : () => setShowFriendsPanel(true)}
+        selectedUser={selectedUser}
+        onChangeUser={() => setShowUserSelector(true)}
+        viewOnly={VIEW_ONLY}
       />
 
       <main className="main-content">
@@ -141,6 +186,8 @@ function App() {
                 balances={balances}
                 stats={stats}
                 categories={CATEGORIES}
+                selectedUser={selectedUser}
+                expenses={expenses}
               />
             )}
 
@@ -149,8 +196,9 @@ function App() {
                 expenses={expenses}
                 friends={friends}
                 categories={CATEGORIES}
-                onEdit={openEditForm}
-                onDelete={handleDeleteExpense}
+                onEdit={VIEW_ONLY ? null : openEditForm}
+                onDelete={VIEW_ONLY ? null : handleDeleteExpense}
+                viewOnly={VIEW_ONLY}
               />
             )}
 
@@ -163,25 +211,29 @@ function App() {
                 expenses={expenses}
                 stats={stats}
                 categories={CATEGORIES}
-                onRecordPayment={() => setShowPaymentForm(true)}
-                onDeletePayment={handleDeletePayment}
+                onRecordPayment={VIEW_ONLY ? null : () => setShowPaymentForm(true)}
+                onDeletePayment={VIEW_ONLY ? null : handleDeletePayment}
+                viewOnly={VIEW_ONLY}
+                selectedUser={selectedUser}
               />
             )}
           </div>
 
-          {/* Floating Add Button */}
-          <button
-            className="fab"
-            onClick={() => setShowExpenseForm(true)}
-            title="Add Expense"
-          >
-            <span>+</span>
-          </button>
+          {/* Floating Add Button - Hidden in VIEW_ONLY mode */}
+          {!VIEW_ONLY && (
+            <button
+              className="fab"
+              onClick={() => setShowExpenseForm(true)}
+              title="Add Expense"
+            >
+              <span>+</span>
+            </button>
+          )}
         </div>
       </main>
 
       {/* Expense Form Modal */}
-      {showExpenseForm && (
+      {showExpenseForm && !VIEW_ONLY && (
         <ExpenseForm
           friends={friends}
           categories={CATEGORIES}
@@ -192,7 +244,7 @@ function App() {
       )}
 
       {/* Friends Panel Modal */}
-      {showFriendsPanel && (
+      {showFriendsPanel && !VIEW_ONLY && (
         <FriendsPanel
           friends={friends}
           onUpdate={handleUpdateFriends}
@@ -201,7 +253,7 @@ function App() {
       )}
 
       {/* Payment Form Modal */}
-      {showPaymentForm && (
+      {showPaymentForm && !VIEW_ONLY && (
         <PaymentForm
           friends={friends}
           onSubmit={handleAddPayment}

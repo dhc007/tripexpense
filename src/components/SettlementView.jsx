@@ -3,7 +3,7 @@ import { formatCurrency, calculateExpenseSplit } from '../utils/splitCalculator'
 import { TRIP_INFO } from '../data/initialData';
 import './SettlementView.css';
 
-function SettlementView({ friends, balances, settlements, payments = [], expenses = [], stats = {}, categories = [], onRecordPayment, onDeletePayment }) {
+function SettlementView({ friends, balances, settlements, payments = [], expenses = [], stats = {}, categories = [], onRecordPayment, onDeletePayment, viewOnly, selectedUser }) {
     const [showCopied, setShowCopied] = useState(false);
 
     const getFriendInfo = (friendId) => friends.find(f => f.id === friendId) || {};
@@ -360,9 +360,11 @@ function SettlementView({ friends, balances, settlements, payments = [], expense
                             }
                         </p>
                     </div>
-                    <button className="btn btn-primary" onClick={onRecordPayment}>
-                        + Record Payment
-                    </button>
+                    {!viewOnly && onRecordPayment && (
+                        <button className="btn btn-primary" onClick={onRecordPayment}>
+                            + Record Payment
+                        </button>
+                    )}
                 </div>
 
                 {settlements.length === 0 ? (
@@ -447,13 +449,15 @@ function SettlementView({ friends, balances, settlements, payments = [], expense
                                     </div>
                                     <div className="payment-amount-section">
                                         <span className="payment-amount">{formatCurrency(payment.amount)}</span>
-                                        <button
-                                            className="btn-icon btn-small btn-danger-icon"
-                                            onClick={() => onDeletePayment(payment.id)}
-                                            title="Delete payment"
-                                        >
-                                            🗑️
-                                        </button>
+                                        {!viewOnly && onDeletePayment && (
+                                            <button
+                                                className="btn-icon btn-small btn-danger-icon"
+                                                onClick={() => onDeletePayment(payment.id)}
+                                                title="Delete payment"
+                                            >
+                                                🗑️
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             );

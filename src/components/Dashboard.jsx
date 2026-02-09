@@ -1,7 +1,7 @@
-import { formatCurrency } from '../utils/splitCalculator';
+import { formatCurrency, calculateExpenseSplit } from '../utils/splitCalculator';
 import './Dashboard.css';
 
-function Dashboard({ friends, balances, stats, categories }) {
+function Dashboard({ friends, balances, stats, categories, selectedUser, expenses }) {
     // Sort friends by balance for display
     const sortedFriends = [...friends].sort((a, b) => balances[b.id] - balances[a.id]);
 
@@ -17,8 +17,63 @@ function Dashboard({ friends, balances, stats, categories }) {
 
     const topPayer = friends.find(f => f.id === stats.topPayer);
 
+    // Calculate user's personal spending (what they owe from expenses they participated in)
+    const getUserSpending = (userId) => {
+        let totalSpent = 0;
+        expenses.forEach(expense => {
+            const splits = calculateExpenseSplit(expense, friends);
+            if (splits[userId]) {
+                totalSpent += splits[userId];
+            }
+        });
+        return totalSpent;
+    };
+
+    // Personal summary for selected user
+    const personalSummary = selectedUser && selectedUser.id !== 'guest' ? {
+        name: selectedUser.name,
+        paid: stats.paidByPerson[selectedUser.id] || 0,
+        spent: getUserSpending(selectedUser.id),
+        balance: balances[selectedUser.id] || 0
+    } : null;
+
     return (
         <div className="dashboard">
+            {/* Personal Summary Card - Only show for logged in user */}
+            {personalSummary && (
+                <div className="personal-summary animate-fade-in">
+                    <div className="personal-header">
+                        <div className={`personal-avatar ${selectedUser.color}`}>
+                            {personalSummary.name.charAt(0)}
+                        </div>
+                        <div className="personal-greeting">
+                            <h2>Hi {personalSummary.name}! 👋</h2>
+                            <p>Here's your trip breakdown</p>
+                        </div>
+                    </div>
+
+                    <div className="personal-stats">
+                        <div className="personal-stat">
+                            <span className="personal-stat-label">You Paid</span>
+                            <span className="personal-stat-value paid">{formatCurrency(personalSummary.paid)}</span>
+                        </div>
+                        <div className="personal-stat">
+                            <span className="personal-stat-label">Your Share</span>
+                            <span className="personal-stat-value spent">{formatCurrency(personalSummary.spent)}</span>
+                        </div>
+                        <div className="personal-stat highlight">
+                            <span className="personal-stat-label">Your Balance</span>
+                            <span className={`personal-stat-value ${personalSummary.balance >= 0 ? 'positive' : 'negative'}`}>
+                                {personalSummary.balance >= 0 ? '+' : ''}{formatCurrency(personalSummary.balance)}
+                            </span>
+                            <span className="personal-stat-status">
+                                {personalSummary.balance >= 0 ? '💰 You get back' : '💸 You owe'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Quick Stats Row */}
             <div className="stats-row">
                 <div className="stat-card">
@@ -64,11 +119,12 @@ function Dashboard({ friends, balances, stats, categories }) {
                         const balance = balances[friend.id];
                         const isPositive = balance >= 0;
                         const paidAmount = stats.paidByPerson[friend.id] || 0;
+                        const isCurrentUser = selectedUser && selectedUser.id === friend.id;
 
                         return (
                             <div
                                 key={friend.id}
-                                className={`balance-card ${isPositive ? 'positive' : 'negative'}`}
+                                className={`balance-card ${isPositive ? 'positive' : 'negative'} ${isCurrentUser ? 'current-user' : ''}`}
                                 style={{ animationDelay: `${index * 0.1}s` }}
                             >
                                 <div className="balance-header">
@@ -76,7 +132,10 @@ function Dashboard({ friends, balances, stats, categories }) {
                                         {friend.name.charAt(0)}
                                     </div>
                                     <div className="balance-name">
-                                        <span className="name">{friend.name}</span>
+                                        <span className="name">
+                                            {friend.name}
+                                            {isCurrentUser && <span className="you-badge">You</span>}
+                                        </span>
                                         <span className="days">{friend.daysPresent} days</span>
                                     </div>
                                 </div>

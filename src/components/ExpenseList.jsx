@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { formatCurrency, calculateExpenseSplit } from '../utils/splitCalculator';
 import './ExpenseList.css';
 
-function ExpenseList({ expenses, friends, categories, onEdit, onDelete }) {
+function ExpenseList({ expenses, friends, categories, onEdit, onDelete, viewOnly }) {
     const [filter, setFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -58,7 +58,7 @@ function ExpenseList({ expenses, friends, categories, onEdit, onDelete }) {
                 <div className="empty-state">
                     <div className="empty-state-icon">📋</div>
                     <h3>No expenses found</h3>
-                    <p>Add your first expense using the + button below</p>
+                    <p>{viewOnly ? 'No matching expenses' : 'Add your first expense using the + button below'}</p>
                 </div>
             ) : (
                 <div className="expense-list">
@@ -103,14 +103,17 @@ function ExpenseList({ expenses, friends, categories, onEdit, onDelete }) {
 
                                 <div className="expense-amount-section">
                                     <span className="expense-amount">{formatCurrency(expense.amount)}</span>
-                                    <div className="expense-actions">
-                                        <button className="btn-icon btn-small" onClick={() => onEdit(expense)} title="Edit">
-                                            ✏️
-                                        </button>
-                                        <button className="btn-icon btn-small btn-danger-icon" onClick={() => onDelete(expense.id)} title="Delete">
-                                            🗑️
-                                        </button>
-                                    </div>
+                                    {/* Only show edit/delete buttons when NOT in viewOnly mode */}
+                                    {!viewOnly && onEdit && onDelete && (
+                                        <div className="expense-actions">
+                                            <button className="btn-icon btn-small" onClick={() => onEdit(expense)} title="Edit">
+                                                ✏️
+                                            </button>
+                                            <button className="btn-icon btn-small btn-danger-icon" onClick={() => onDelete(expense.id)} title="Delete">
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );
